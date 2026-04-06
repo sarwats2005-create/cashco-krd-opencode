@@ -1,158 +1,311 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
-import { ClayCard } from '@/components/ui/clay/ClayCard';
-import { ClayButton } from '@/components/ui/clay/ClayButton';
-import { ClayInput } from '@/components/ui/clay/ClayInput';
+import { createClient } from '@insforge/sdk';
+
+const insforge = createClient({
+  baseUrl: 'https://7k4pu358.ap-southeast.insforge.app',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3OC0xMjM0LTU2NzgtOTBhYi1jZGVmMTIzNDU2NzgiLCJlbWFpbCI6ImFub25AaW5zZm9yZ2UuY29tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NTkzNzF9.hcTaGixnECtqoVNUYc8jGlRDQFmpgiPLw5mjDOOT2As',
+});
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [name, setName] = useState('');
+  const [step, setStep] = useState<'signup' | 'verify'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      setLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+
     try {
-      router.push('/verify-otp');
-    } catch (err) {
-      setError('Failed to create account');
+      const { data, error: signUpError } = await insforge.auth.signUp({
+        email,
+        password,
+        redirectTo: 'https://cashco-krd-opencode.vercel.app/sign-in',
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data?.requireEmailVerification) {
+        setStep('verify');
+        setResendTimer(60);
+        const timer = setInterval(() => {
+          setResendTimer(t => {
+            if (t <= 1) clearInterval(timer);
+            return t - 1;
+          });
+        }, 1000);
+      } else if (data?.accessToken) {
+        router.push('/setup');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F5F6F7]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <ClayCard className="p-8">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-[20px] bg-[#6C63FF] flex items-center justify-center font-bold text-2xl text-white mx-auto mb-4 shadow-[0_8px_30px_rgba(108,99,255,0.3)]">
-              C
-            </div>
-            <h1 className="text-2xl font-bold text-[#2F2F33]">CashCo-KRD</h1>
-            <p className="text-[#2F2F33]/60 mt-1">Create your account</p>
+  const handleVerify = async () => {
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6) {
+      setError('Please enter the 6-digit code');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error: verifyError } = await insforge.auth.verifyEmail({
+        email,
+        otp: otpCode,
+      });
+
+      if (verifyError) {
+        setError(verifyError.message || 'Invalid or expired code');
+        setLoading(false);
+        return;
+      }
+
+      if (data?.user) {
+        router.push('/setup');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendTimer > 0) return;
+
+    try {
+      await insforge.auth.resendVerificationEmail({
+        email,
+        redirectTo: 'https://cashco-krd-opencode.vercel.app/sign-in',
+      });
+      setResendTimer(60);
+      const timer = setInterval(() => {
+        setResendTimer(t => {
+          if (t <= 1) clearInterval(timer);
+          return t - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value && index < 5) otpInputRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  if (step === 'verify') {
+    return (
+      <div style={pageStyle}>
+        <div style={cardStyle}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={logoStyle}>C</div>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>Verify Your Email</h1>
+            <p style={{ color: 'rgba(47,47,51,0.6)' }}>Enter the 6-digit code sent to {email}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-[14px] bg-[#E74C3C]/10 text-[#E74C3C] text-sm">
-                {error}
-              </div>
+          {error && (
+            <div style={{ padding: '12px', backgroundColor: 'rgba(231,76,60,0.1)', borderRadius: '14px', color: '#E74C3C', marginBottom: '16px', fontSize: '14px' }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '24px' }}>
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => { otpInputRefs.current[index] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                style={{
+                  width: '48px',
+                  height: '56px',
+                  textAlign: 'center',
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  backgroundColor: '#F5F6F7',
+                  borderRadius: '14px',
+                  border: '1px solid #E0E0E0',
+                  outline: 'none',
+                }}
+              />
+            ))}
+          </div>
+
+          <button onClick={handleVerify} disabled={loading || otp.join('').length !== 6} style={primaryButtonStyle}>
+            {loading ? 'Verifying...' : 'Verify'}
+          </button>
+
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            {resendTimer > 0 ? (
+              <p style={{ color: 'rgba(47,47,51,0.6)', fontSize: '14px' }}>Resend code in {resendTimer}s</p>
+            ) : (
+              <button onClick={handleResend} style={{ background: 'none', border: 'none', color: '#6C63FF', cursor: 'pointer', fontSize: '14px' }}>
+                Resend Code
+              </button>
             )}
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-12"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2F2F33]/40"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Confirm Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-12"
-                  required
-                />
-              </div>
-            </div>
-
-            <ClayButton 
-              type="submit" 
-              variant="primary"
-              className="w-full py-3"
-              disabled={loading}
-            >
-              {loading ? 'Creating account...' : 'Sign Up'}
-            </ClayButton>
-          </form>
-
-          <p className="text-center mt-6 text-[#2F2F33]/60">
-            Already have an account?{' '}
-            <Link href="/sign-in" className="text-[#6C63FF] font-medium hover:underline">
-              Sign In
-            </Link>
+          <p style={{ textAlign: 'center', marginTop: '24px' }}>
+            <Link href="/sign-up" style={{ color: '#6C63FF', fontWeight: 500 }}>Back to Sign Up</Link>
           </p>
-        </ClayCard>
-      </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={logoStyle}>C</div>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>CashCo-KRD</h1>
+          <p style={{ color: 'rgba(47,47,51,0.6)' }}>Create your account</p>
+        </div>
+
+        {error && (
+          <div style={{ padding: '12px', backgroundColor: 'rgba(231,76,60,0.1)', borderRadius: '14px', color: '#E74C3C', marginBottom: '16px', fontSize: '14px' }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSignUp}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>Email</label>
+            <input type="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>Password</label>
+            <input type="password" placeholder="Create a password (min 6 chars)" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required minLength={6} />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={labelStyle}>Confirm Password</label>
+            <input type="password" placeholder="Confirm your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} required />
+          </div>
+
+          <button type="submit" style={primaryButtonStyle} disabled={loading}>
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', color: 'rgba(47,47,51,0.6)' }}>
+          Already have an account?{' '}
+          <Link href="/sign-in" style={{ color: '#6C63FF', fontWeight: 500 }}>Sign In</Link>
+        </p>
+      </div>
     </div>
   );
 }
+
+const pageStyle: React.CSSProperties = {
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '20px',
+  backgroundColor: '#F5F6F7',
+};
+
+const cardStyle: React.CSSProperties = {
+  width: '100%',
+  maxWidth: '420px',
+  padding: '32px',
+  backgroundColor: '#F5F6F7',
+  borderRadius: '24px',
+  boxShadow: '0 8px 30px rgba(0,0,0,0.06), 0 2px 4px rgba(255,255,255,0.8) inset',
+};
+
+const logoStyle: React.CSSProperties = {
+  width: '64px',
+  height: '64px',
+  borderRadius: '20px',
+  backgroundColor: '#6C63FF',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '28px',
+  fontWeight: 'bold',
+  color: 'white',
+  margin: '0 auto 16px',
+  boxShadow: '0 8px 30px rgba(108,99,255,0.3)',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '14px',
+  fontWeight: 500,
+  color: '#2F2F33',
+  marginBottom: '8px',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '12px 16px',
+  backgroundColor: '#F5F6F7',
+  borderRadius: '16px',
+  boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15)',
+  border: '1px solid #E0E0E0',
+  outline: 'none',
+  fontSize: '16px',
+};
+
+const primaryButtonStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '14px 20px',
+  borderRadius: '14px',
+  border: 'none',
+  backgroundColor: '#6C63FF',
+  color: 'white',
+  fontSize: '16px',
+  fontWeight: 500,
+  cursor: 'pointer',
+  marginTop: '8px',
+};
