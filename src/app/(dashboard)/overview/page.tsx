@@ -63,15 +63,21 @@ interface Transaction {
 export default function OverviewPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dateRange, setDateRange] = useState('today');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const mockTransactions: Transaction[] = [
       { id: '1', type: 'credit', amount: 250000, category: 'Sales Income', description: 'POS Sale #1234', performed_by: 'Ahmed', recorded_at: new Date().toISOString() },
       { id: '2', type: 'debit', amount: 50000, category: 'Expense', description: 'Office supplies', performed_by: 'Sara', recorded_at: new Date().toISOString() },
       { id: '3', type: 'credit', amount: 150000, category: 'Sales Income', description: 'POS Sale #1233', performed_by: 'Ahmed', recorded_at: new Date().toISOString() },
       { id: '4', type: 'debit', amount: 100000, category: 'Employee Advance', description: 'Advance for Omar', performed_by: 'Admin', recorded_at: new Date().toISOString() },
     ];
-    setTransactions(mockTransactions);
+    // simulate fetch delay
+    setTimeout(() => {
+      setTransactions(mockTransactions);
+      setLoading(false);
+    }, 800);
   }, [dateRange]);
 
   return (
@@ -82,34 +88,46 @@ export default function OverviewPage() {
         <p className="text-[#2F2F33]/60">Welcome back! Here's what's happening today.</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard
-          title="Today's Sales"
-          value={1250000}
-          change={12}
-          icon={<DollarSign className="w-5 h-5 text-[#27AE60]" />}
-          variant="credit"
-        />
-        <KpiCard
-          title="Today's Expenses"
-          value={185000}
-          change={-5}
-          icon={<TrendingDown className="w-5 h-5 text-[#E74C3C]" />}
-          variant="debit"
-        />
-        <KpiCard
-          title="Active Vault Balance"
-          value={4500000}
-          icon={<Wallet className="w-5 h-5 text-[#6C63FF]" />}
-        />
-        <KpiCard
-          title="Low Stock Items"
-          value={8}
-          icon={<AlertTriangle className="w-5 h-5 text-[#F39C12]" />}
-          variant="warning"
-        />
-      </div>
+      {/* KPI Cards (loading skeletons while data loads) */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {new Array(4).fill(null).map((_, i) => (
+            <ClayCard key={i} className="p-5">
+              <div style={{ width: '60%', height: 14, backgroundColor: '#e0e0e0', borderRadius: 6 }} />
+              <div style={{ width: '40%', height: 18, marginTop: 4, backgroundColor: '#e0e0e0', borderRadius: 6 }} />
+              <div style={{ width: '100%', height: 14, marginTop: 4, backgroundColor: '#e0e0e0', borderRadius: 6 }} />
+            </ClayCard>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard
+            title="Today's Sales"
+            value={1250000}
+            change={12}
+            icon={<DollarSign className="w-5 h-5 text-[#27AE60]" />}
+            variant="credit"
+          />
+          <KpiCard
+            title="Today's Expenses"
+            value={185000}
+            change={-5}
+            icon={<TrendingDown className="w-5 h-5 text-[#E74C3C]" />}
+            variant="debit"
+          />
+          <KpiCard
+            title="Active Vault Balance"
+            value={4500000}
+            icon={<Wallet className="w-5 h-5 text-[#6C63FF]" />}
+          />
+          <KpiCard
+            title="Low Stock Items"
+            value={8}
+            icon={<AlertTriangle className="w-5 h-5 text-[#F39C12]" />}
+            variant="warning"
+          />
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

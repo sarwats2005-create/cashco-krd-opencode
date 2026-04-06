@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Noto_Kufi_Arabic, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="en" dir="ltr">
       <body className={`${outfit.variable} ${notoKufi.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         {children}
+        <Toaster position="top-right" reverseOrder={false} toastOptions={{ duration: 4000 }} />
       </body>
     </html>
   );
