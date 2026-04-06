@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Receipt, Plus, Search, Download, Filter, MoreVertical, DollarSign, Calendar } from 'lucide-react';
-import { ClayCard } from '@/components/ui/clay/ClayCard';
-import { ClayButton } from '@/components/ui/clay/ClayButton';
-import { ClayBadge } from '@/components/ui/clay/ClayBadge';
-import { ClayModal } from '@/components/ui/clay/ClayModal';
-import { ClayInput } from '@/components/ui/clay/ClayInput';
+import { Receipt, Plus, Search, Download, MoreVertical, DollarSign, Calendar } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/currency';
 
 interface Expense {
@@ -35,30 +29,14 @@ const mockExpenses: Expense[] = [
 const categories = ['All', 'Rent', 'Utilities', 'Salaries', 'Supplies', 'Maintenance', 'Transport', 'Marketing', 'Equipment', 'Taxes & Fees', 'Other'];
 
 const categoryIcons: Record<string, string> = {
-  'Rent': '🏠',
-  'Utilities': '💡',
-  'Salaries': '💰',
-  'Supplies': '📦',
-  'Maintenance': '🔧',
-  'Transport': '🚚',
-  'Marketing': '📢',
-  'Equipment': '🖥️',
-  'Taxes & Fees': '📋',
-  'Other': '📝',
+  'Rent': 'R', 'Utilities': 'U', 'Salaries': 'S', 'Supplies': 'P', 'Maintenance': 'M', 'Transport': 'T', 'Marketing': 'M', 'Equipment': 'E', 'Taxes & Fees': 'T', 'Other': 'O',
 };
 
 export default function ExpensesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [dateFilter, setDateFilter] = useState('all');
   const [addExpenseModal, setAddExpenseModal] = useState(false);
-  const [newExpense, setNewExpense] = useState({
-    category: '',
-    description: '',
-    amount: 0,
-    vault_id: '',
-    expense_date: new Date().toISOString().split('T')[0],
-  });
+  const [newExpense, setNewExpense] = useState({ category: '', description: '', amount: 0, vault_id: '', expense_date: new Date().toISOString().split('T')[0] });
 
   const filteredExpenses = mockExpenses.filter(exp => {
     const matchesSearch = exp.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -67,265 +45,183 @@ export default function ExpensesPage() {
   });
 
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount_in_base, 0);
-  const categoryTotals = categories.filter(c => c !== 'All').map(cat => ({
-    category: cat,
-    total: mockExpenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount_in_base, 0),
-  })).sort((a, b) => b.total - a.total);
 
-  const handleAddExpense = () => {
-    setAddExpenseModal(false);
-    setNewExpense({
-      category: '',
-      description: '',
-      amount: 0,
-      vault_id: '',
-      expense_date: new Date().toISOString().split('T')[0],
-    });
+  const cardStyle: React.CSSProperties = {
+    padding: '16px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '24px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.8)',
   };
 
+  const buttonStyle = (primary = false): React.CSSProperties => ({
+    padding: '8px 16px',
+    borderRadius: '14px',
+    border: 'none',
+    backgroundColor: primary ? '#6C63FF' : '#F5F6F7',
+    color: primary ? 'white' : '#2F2F33',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 14px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '16px',
+    border: '1px solid transparent',
+    outline: 'none',
+    fontSize: '14px',
+  };
+
+  const filterButtonStyle = (isActive: boolean): React.CSSProperties => ({
+    padding: '6px 14px',
+    fontSize: '14px',
+    borderRadius: '999px',
+    border: 'none',
+    cursor: 'pointer',
+    backgroundColor: isActive ? '#6C63FF' : '#F5F6F7',
+    color: isActive ? 'white' : 'rgba(47,47,51,0.6)',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s',
+  });
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[#2F2F33]">Expenses</h1>
-          <p className="text-[#2F2F33]/60">Track and manage business expenses</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>Expenses</h1>
+          <p style={{ color: 'rgba(47,47,51,0.6)' }}>Track and manage business expenses</p>
         </div>
-        <div className="flex gap-2">
-          <ClayButton variant="ghost" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </ClayButton>
-          <ClayButton variant="primary" onClick={() => setAddExpenseModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button style={buttonStyle()}>
+            <Download size={16} />
+            Export
+          </button>
+          <button style={buttonStyle(true)} onClick={() => setAddExpenseModal(true)}>
+            <Plus size={16} />
             Add Expense
-          </ClayButton>
+          </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#E74C3C]/10">
-              <Receipt className="w-6 h-6 text-[#E74C3C]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">Total Expenses</p>
-              <p className="text-2xl font-bold text-[#E74C3C]">{formatCurrency(totalExpenses)}</p>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Receipt size={32} color="#6C63FF" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{mockExpenses.length}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Expenses</p>
           </div>
-        </ClayCard>
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#6C63FF]/10">
-              <Receipt className="w-6 h-6 text-[#6C63FF]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">This Month</p>
-              <p className="text-2xl font-bold">{formatCurrency(totalExpenses)}</p>
-            </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <DollarSign size={32} color="#E74C3C" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#E74C3C' }}>{formatCurrency(totalExpenses)}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Amount</p>
           </div>
-        </ClayCard>
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#F39C12]/10">
-              <DollarSign className="w-6 h-6 text-[#F39C12]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">Transactions</p>
-              <p className="text-2xl font-bold">{filteredExpenses.length}</p>
-            </div>
-          </div>
-        </ClayCard>
+        </div>
       </div>
 
-      {/* Category Breakdown */}
-      <ClayCard className="p-5">
-        <h2 className="text-lg font-semibold text-[#2F2F33] mb-4">Category Breakdown</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {categoryTotals.slice(0, 5).map((cat) => (
-            <div key={cat.category} className="p-3 rounded-[14px] bg-[#F5F6F7] text-center">
-              <p className="text-2xl mb-1">{categoryIcons[cat.category] || '📝'}</p>
-              <p className="text-sm font-medium">{cat.category}</p>
-              <p className="text-sm text-[#E74C3C] font-bold">{formatCurrency(cat.total)}</p>
-            </div>
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px' }}>
+            <Search size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(47,47,51,0.4)' }} />
+            <input type="text" placeholder="Search expenses..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ ...inputStyle, paddingLeft: '40px' }} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          {categories.map(cat => (
+            <button key={cat} onClick={() => setSelectedCategory(cat)} style={filterButtonStyle(selectedCategory === cat)}>{cat}</button>
           ))}
         </div>
-      </ClayCard>
+      </div>
 
-      {/* Filters */}
-      <ClayCard className="p-4">
-        <div className="flex flex-col lg:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-            <input
-              type="text"
-              placeholder="Search expenses..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F5F6F7] rounded-[14px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-            />
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-1.5 text-sm rounded-[999px] whitespace-nowrap transition-colors ${
-                  selectedCategory === cat
-                    ? 'bg-[#6C63FF] text-white'
-                    : 'bg-[#F5F6F7] text-[#2F2F33]/60 hover:bg-[#E0E0E0]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      </ClayCard>
-
-      {/* Expenses Table */}
-      <ClayCard className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#F5F6F7]">
+      <div style={{ ...cardStyle, marginTop: '24px', padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: '#F5F6F7' }}>
               <tr>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Date</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Category</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Description</th>
-                <th className="text-right p-4 text-sm font-medium text-[#2F2F33]/60">Amount</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Vault</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Paid By</th>
-                <th className="text-center p-4 text-sm font-medium text-[#2F2F33]/60">Actions</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Date</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Category</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Description</th>
+                <th style={{ textAlign: 'right', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Amount</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Vault</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Paid By</th>
+                <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredExpenses.map((expense, index) => (
-                <motion.tr
-                  key={expense.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="border-t border-[#E0E0E0] hover:bg-[#F5F6F7]/50"
-                >
-                  <td className="p-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#2F2F33]/40" />
+              {filteredExpenses.map((expense) => (
+                <tr key={expense.id} style={{ borderTop: '1px solid #E0E0E0' }}>
+                  <td style={{ padding: '16px', fontSize: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Calendar size={16} color="rgba(47,47,51,0.4)" />
                       {formatDate(expense.expense_date)}
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <span>{categoryIcons[expense.category] || '📝'}</span>
-                      <span className="text-sm">{expense.category}</span>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: '24px', height: '24px', borderRadius: '6px', backgroundColor: 'rgba(108,99,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: '#6C63FF' }}>{categoryIcons[expense.category] || 'O'}</span>
+                      <span style={{ fontSize: '14px' }}>{expense.category}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-sm">{expense.description}</td>
-                  <td className="p-4 text-right">
-                    <p className="font-bold text-[#E74C3C]">{formatCurrency(expense.amount, expense.currency)}</p>
+                  <td style={{ padding: '16px', fontSize: '14px' }}>{expense.description}</td>
+                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#E74C3C' }}>{formatCurrency(expense.amount, expense.currency)}</p>
                   </td>
-                  <td className="p-4 text-sm">{expense.vault_name || '-'}</td>
-                  <td className="p-4 text-sm">{expense.paid_by}</td>
-                  <td className="p-4 text-center">
-                    <button className="p-2 rounded-[10px] hover:bg-[#F5F6F7]">
-                      <MoreVertical className="w-4 h-4" />
+                  <td style={{ padding: '16px', fontSize: '14px' }}>{expense.vault_name || '-'}</td>
+                  <td style={{ padding: '16px', fontSize: '14px' }}>{expense.paid_by}</td>
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <button style={{ padding: '8px', borderRadius: '10px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer' }}>
+                      <MoreVertical size={16} />
                     </button>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <div style={{ padding: '16px', borderTop: '1px solid #E0E0E0', display: 'flex', justifyContent: 'space-between' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Showing {filteredExpenses.length} of {mockExpenses.length} expenses</p>
+          <p style={{ fontSize: '14px', fontWeight: 'bold' }}>Total: <span style={{ color: '#E74C3C' }}>{formatCurrency(totalExpenses)}</span></p>
+        </div>
+      </div>
 
-        {filteredExpenses.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-[#2F2F33]/60">
-            <Receipt className="w-12 h-12 mb-4" />
-            <p>No expenses found</p>
-          </div>
-        )}
-
-        <div className="p-4 border-t border-[#E0E0E0]">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-[#2F2F33]/60">
-              Showing {filteredExpenses.length} of {mockExpenses.length} expenses
-            </p>
-            <p className="text-sm font-bold">
-              Total: <span className="text-[#E74C3C]">{formatCurrency(totalExpenses)}</span>
-            </p>
+      {addExpenseModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Add New Expense</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Date</label>
+                <input type="date" style={inputStyle} value={newExpense.expense_date} onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Category</label>
+                <select style={inputStyle} value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}>
+                  <option value="">Select category</option>
+                  {categories.filter(c => c !== 'All').map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Description</label>
+                <input style={inputStyle} placeholder="Enter description" value={newExpense.description} onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Amount (IQD)</label>
+                <input type="number" style={inputStyle} value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: Number(e.target.value) })} />
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button style={{ ...buttonStyle(), flex: 1 }} onClick={() => setAddExpenseModal(false)}>Cancel</button>
+                <button style={{ ...buttonStyle(true), flex: 1 }} onClick={() => setAddExpenseModal(false)}>Add Expense</button>
+              </div>
+            </div>
           </div>
         </div>
-      </ClayCard>
-
-      {/* Add Expense Modal */}
-      <ClayModal
-        isOpen={addExpenseModal}
-        onClose={() => setAddExpenseModal(false)}
-        title="Add New Expense"
-        className="w-full max-w-lg"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Date</label>
-            <ClayInput
-              type="date"
-              value={newExpense.expense_date}
-              onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Category</label>
-            <select
-              value={newExpense.category}
-              onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-              className="w-full px-4 py-2.5 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-            >
-              <option value="">Select category</option>
-              {categories.filter(c => c !== 'All').map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Description</label>
-            <ClayInput
-              placeholder="Enter description"
-              value={newExpense.description}
-              onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Amount (IQD)</label>
-            <ClayInput
-              type="number"
-              placeholder="0"
-              value={newExpense.amount}
-              onChange={(e) => setNewExpense({ ...newExpense, amount: Number(e.target.value) })}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Paid From Vault</label>
-            <select
-              value={newExpense.vault_id}
-              onChange={(e) => setNewExpense({ ...newExpense, vault_id: e.target.value })}
-              className="w-full px-4 py-2.5 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-            >
-              <option value="">Select vault</option>
-              <option value="1">Main Cash Drawer</option>
-              <option value="2">USD Vault</option>
-              <option value="3">Digital Wallet</option>
-            </select>
-          </div>
-          <div className="flex gap-2 pt-4">
-            <ClayButton variant="ghost" className="flex-1" onClick={() => setAddExpenseModal(false)}>
-              Cancel
-            </ClayButton>
-            <ClayButton variant="primary" className="flex-1" onClick={handleAddExpense}>
-              Add Expense
-            </ClayButton>
-          </div>
-        </div>
-      </ClayModal>
+      )}
     </div>
   );
 }

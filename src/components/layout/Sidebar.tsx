@@ -13,10 +13,8 @@ import {
   Settings, 
   Bell,
   Globe,
-  LogOut,
-  Menu
+  LogOut
 } from 'lucide-react';
-import { cn } from '@/utils/currency';
 import { useOrgStore } from '@/store/orgStore';
 
 const navItems = [
@@ -37,46 +35,97 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { currentOrg } = useOrgStore();
 
+  const sidebarStyle: React.CSSProperties = {
+    position: 'fixed',
+    left: 0,
+    top: 0,
+    height: '100vh',
+    width: '240px',
+    backgroundColor: '#2F2F33',
+    color: 'white',
+    display: 'flex',
+    flexDirection: 'column',
+    zIndex: 40,
+    boxShadow: '4px 0 24px rgba(47,47,51,0.12)',
+  };
+
+  const logoContainerStyle: React.CSSProperties = {
+    padding: '16px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+  };
+
+  const navStyle: React.CSSProperties = {
+    flex: 1,
+    padding: '12px',
+    overflowY: 'auto',
+  };
+
+  const navItemStyle = (isActive: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    borderRadius: '14px',
+    transition: 'all 0.2s ease',
+    backgroundColor: isActive ? '#6C63FF' : 'transparent',
+    boxShadow: isActive ? '0 4px 12px rgba(108,99,255,0.4)' : 'none',
+  });
+
+  const bottomStyle: React.CSSProperties = {
+    padding: '12px',
+    borderTop: '1px solid rgba(255,255,255,0.1)',
+  };
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#2F2F33] text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(47,47,51,0.12)]">
-      {/* Logo & Org */}
-      <div className="p-4 border-b border-white/10">
-        <Link href="/overview" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[14px] bg-[#6C63FF] flex items-center justify-center font-bold text-lg">
+    <aside style={sidebarStyle}>
+      <div style={logoContainerStyle}>
+        <Link href="/overview" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '14px',
+            backgroundColor: '#6C63FF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '18px',
+          }}>
             C
           </div>
           <div>
-            <h1 className="font-semibold text-sm">CashCo-KRD</h1>
-            <p className="text-xs text-white/60 truncate max-w-[150px]">
+            <h1 style={{ fontWeight: 600, fontSize: '14px' }}>CashCo-KRD</h1>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {currentOrg?.name || 'Select Organization'}
             </p>
           </div>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-3 overflow-y-auto">
-        <ul className="space-y-1">
+      <nav style={navStyle}>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
+            const Icon = item.icon;
             return (
-              <li key={item.href}>
+              <li key={item.href} style={{ marginBottom: '4px' }}>
                 <Link
                   href={item.href}
                   onClick={onMobileClose}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-[14px] transition-all duration-200',
-                    isActive 
-                      ? 'bg-[#6C63FF] shadow-lg' 
-                      : 'hover:bg-white/10'
-                  )}
+                  style={navItemStyle(isActive)}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <Icon size={20} />
+                  <span style={{ fontSize: '14px', fontWeight: 500 }}>{item.label}</span>
                   {isActive && (
                     <motion.div
                       layoutId="activeNav"
-                      className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+                      style={{
+                        marginLeft: 'auto',
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: 'white',
+                      }}
                     />
                   )}
                 </Link>
@@ -86,22 +135,21 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Bottom Actions */}
-      <div className="p-3 border-t border-white/10">
-        <button className="flex items-center gap-3 w-full px-4 py-3 rounded-[14px] hover:bg-white/10 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="text-sm">Notifications</span>
-          <span className="ml-auto bg-[#E74C3C] text-white text-xs px-2 py-0.5 rounded-full">3</span>
+      <div style={bottomStyle}>
+        <button style={{ ...navItemStyle(false), width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
+          <Bell size={20} />
+          <span style={{ fontSize: '14px' }}>Notifications</span>
+          <span style={{ marginLeft: 'auto', backgroundColor: '#E74C3C', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>3</span>
         </button>
         
-        <button className="flex items-center gap-3 w-full px-4 py-3 rounded-[14px] hover:bg-white/10 transition-colors">
-          <Globe className="w-5 h-5" />
-          <span className="text-sm">English</span>
+        <button style={{ ...navItemStyle(false), width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
+          <Globe size={20} />
+          <span style={{ fontSize: '14px' }}>English</span>
         </button>
         
-        <button className="flex items-center gap-3 w-full px-4 py-3 rounded-[14px] hover:bg-white/10 transition-colors text-[#E74C3C]">
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm">Logout</span>
+        <button style={{ ...navItemStyle(false), width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', color: '#E74C3C' }}>
+          <LogOut size={20} />
+          <span style={{ fontSize: '14px' }}>Logout</span>
         </button>
       </div>
     </aside>

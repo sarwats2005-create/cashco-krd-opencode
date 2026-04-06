@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Plus, Download, Upload, Filter, MoreVertical, Package, AlertTriangle, Barcode } from 'lucide-react';
-import { ClayCard } from '@/components/ui/clay/ClayCard';
-import { ClayButton } from '@/components/ui/clay/ClayButton';
-import { ClayBadge } from '@/components/ui/clay/ClayBadge';
-import { ClayModal } from '@/components/ui/clay/ClayModal';
-import { ClayInput } from '@/components/ui/clay/ClayInput';
+import { Search, Plus, Download, Upload, Package, AlertTriangle, Barcode, MoreVertical } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 
 interface Product {
@@ -38,7 +32,6 @@ const mockProducts: Product[] = [
 ];
 
 const categories = ['All', 'Beverages', 'Dairy', 'Bakery', 'Dry Goods', 'Oils'];
-const units = ['piece', 'carton', 'box', 'kg', 'liter'];
 
 export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,8 +52,7 @@ export default function InventoryPage() {
   });
 
   const filteredProducts = mockProducts.filter(p => {
-    const matchesSearch = p.name.en.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = p.name.en.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
     let matchesStock = true;
     if (stockFilter === 'low') matchesStock = p.current_stock < p.reorder_level && p.current_stock > 0;
@@ -72,334 +64,250 @@ export default function InventoryPage() {
   const lowStockCount = mockProducts.filter(p => p.current_stock < p.reorder_level && p.current_stock > 0).length;
   const outOfStockCount = mockProducts.filter(p => p.current_stock === 0).length;
 
-  const handleAddProduct = () => {
-    setAddProductOpen(false);
-    setNewProduct({
-      name: '',
-      category: '',
-      unit_type: 'piece',
-      sku: '',
-      barcode: '',
-      retail_price: 0,
-      wholesale_price: 0,
-      wholesale_min_qty: 1,
-      current_stock: 0,
-      reorder_level: 5,
-    });
+  const cardStyle: React.CSSProperties = {
+    padding: '16px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '24px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.8)',
   };
 
+  const buttonStyle = (primary = false, small = false): React.CSSProperties => ({
+    padding: small ? '6px 12px' : '8px 16px',
+    borderRadius: '14px',
+    border: 'none',
+    backgroundColor: primary ? '#6C63FF' : '#F5F6F7',
+    color: primary ? 'white' : '#2F2F33',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 14px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '16px',
+    border: '1px solid transparent',
+    outline: 'none',
+    fontSize: '14px',
+  };
+
+  const categoryButtonStyle = (isActive: boolean): React.CSSProperties => ({
+    padding: '6px 14px',
+    fontSize: '14px',
+    borderRadius: '999px',
+    border: 'none',
+    cursor: 'pointer',
+    backgroundColor: isActive ? '#6C63FF' : '#F5F6F7',
+    color: isActive ? 'white' : 'rgba(47,47,51,0.6)',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s',
+  });
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[#2F2F33]">Inventory</h1>
-          <p className="text-[#2F2F33]/60">Manage your products and stock</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>Inventory</h1>
+          <p style={{ color: 'rgba(47,47,51,0.6)' }}>Manage your products and stock</p>
         </div>
-        <div className="flex gap-2">
-          <ClayButton variant="ghost" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button style={buttonStyle()}>
+            <Download size={16} />
             Export
-          </ClayButton>
-          <ClayButton variant="ghost" size="sm">
-            <Upload className="w-4 h-4 mr-2" />
+          </button>
+          <button style={buttonStyle()}>
+            <Upload size={16} />
             Import
-          </ClayButton>
-          <ClayButton variant="primary" size="sm" onClick={() => setAddProductOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+          </button>
+          <button style={buttonStyle(true)} onClick={() => setAddProductOpen(true)}>
+            <Plus size={16} />
             Add Product
-          </ClayButton>
+          </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <ClayCard className="p-4">
-          <div className="flex items-center gap-3">
-            <Package className="w-8 h-8 text-[#6C63FF]" />
-            <div>
-              <p className="text-2xl font-bold">{mockProducts.length}</p>
-              <p className="text-sm text-[#2F2F33]/60">Total Products</p>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Package size={32} color="#6C63FF" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{mockProducts.length}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Products</p>
           </div>
-        </ClayCard>
-        <ClayCard className="p-4">
-          <div className="flex items-center gap-3">
-            <Package className="w-8 h-8 text-[#27AE60]" />
-            <div>
-              <p className="text-2xl font-bold text-[#27AE60]">{mockProducts.filter(p => p.is_active).length}</p>
-              <p className="text-sm text-[#2F2F33]/60">In Stock</p>
-            </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Package size={32} color="#27AE60" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#27AE60' }}>{mockProducts.filter(p => p.is_active).length}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>In Stock</p>
           </div>
-        </ClayCard>
-        <ClayCard className="p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-[#F39C12]" />
-            <div>
-              <p className="text-2xl font-bold text-[#F39C12]">{lowStockCount}</p>
-              <p className="text-sm text-[#2F2F33]/60">Low Stock</p>
-            </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <AlertTriangle size={32} color="#F39C12" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#F39C12' }}>{lowStockCount}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Low Stock</p>
           </div>
-        </ClayCard>
-        <ClayCard className="p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-[#E74C3C]" />
-            <div>
-              <p className="text-2xl font-bold text-[#E74C3C]">{outOfStockCount}</p>
-              <p className="text-sm text-[#2F2F33]/60">Out of Stock</p>
-            </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <AlertTriangle size={32} color="#E74C3C" />
+          <div>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#E74C3C' }}>{outOfStockCount}</p>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Out of Stock</p>
           </div>
-        </ClayCard>
+        </div>
       </div>
 
-      {/* Filters */}
-      <ClayCard className="p-4">
-        <div className="flex flex-col lg:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 200px' }}>
+            <Search size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(47,47,51,0.4)' }} />
             <input
               type="text"
               placeholder="Search by name or SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F5F6F7] rounded-[14px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
+              style={{ ...inputStyle, paddingLeft: '40px' }}
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-1.5 text-sm rounded-[999px] whitespace-nowrap transition-colors ${
-                  selectedCategory === cat
-                    ? 'bg-[#6C63FF] text-white'
-                    : 'bg-[#F5F6F7] text-[#2F2F33]/60 hover:bg-[#E0E0E0]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            {[
-              { value: 'all', label: 'All' },
-              { value: 'in', label: 'In Stock' },
-              { value: 'low', label: 'Low Stock' },
-              { value: 'out', label: 'Out of Stock' },
-            ].map(filter => (
-              <button
-                key={filter.value}
-                onClick={() => setStockFilter(filter.value)}
-                className={`px-3 py-1.5 text-sm rounded-[10px] whitespace-nowrap transition-colors ${
-                  stockFilter === filter.value
-                    ? 'bg-[#6C63FF] text-white'
-                    : 'bg-[#F5F6F7] text-[#2F2F33]/60'
-                }`}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
         </div>
-      </ClayCard>
 
-      {/* Products Table */}
-      <ClayCard className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#F5F6F7]">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          {categories.map(cat => (
+            <button key={cat} onClick={() => setSelectedCategory(cat)} style={categoryButtonStyle(selectedCategory === cat)}>
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[{ value: 'all', label: 'All' }, { value: 'in', label: 'In Stock' }, { value: 'low', label: 'Low Stock' }, { value: 'out', label: 'Out of Stock' }].map(filter => (
+            <button key={filter.value} onClick={() => setStockFilter(filter.value)} style={categoryButtonStyle(stockFilter === filter.value)}>
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ ...cardStyle, marginTop: '24px', padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: '#F5F6F7' }}>
               <tr>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Product</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">SKU</th>
-                <th className="text-left p-4 text-sm font-medium text-[#2F2F33]/60">Category</th>
-                <th className="text-right p-4 text-sm font-medium text-[#2F2F33]/60">Price</th>
-                <th className="text-right p-4 text-sm font-medium text-[#2F2F33]/60">Stock</th>
-                <th className="text-center p-4 text-sm font-medium text-[#2F2F33]/60">Status</th>
-                <th className="text-center p-4 text-sm font-medium text-[#2F2F33]/60">Actions</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Product</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>SKU</th>
+                <th style={{ textAlign: 'left', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Category</th>
+                <th style={{ textAlign: 'right', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Price</th>
+                <th style={{ textAlign: 'right', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Stock</th>
+                <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Status</th>
+                <th style={{ textAlign: 'center', padding: '16px', fontSize: '14px', fontWeight: 500, color: 'rgba(47,47,51,0.6)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product, index) => (
-                <motion.tr
-                  key={product.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="border-t border-[#E0E0E0] hover:bg-[#F5F6F7]/50"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-[12px] bg-[#6C63FF]/10 flex items-center justify-center">
-                        <span className="font-bold text-[#6C63FF]">{product.name.en.charAt(0)}</span>
+              {filteredProducts.map((product) => (
+                <tr key={product.id} style={{ borderTop: '1px solid #E0E0E0' }}>
+                  <td style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(108,99,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontWeight: 'bold', color: '#6C63FF' }}>{product.name.en.charAt(0)}</span>
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{product.name.en}</p>
-                        <p className="text-xs text-[#2F2F33]/60">{product.unit_type}</p>
+                        <p style={{ fontSize: '14px', fontWeight: 500 }}>{product.name.en}</p>
+                        <p style={{ fontSize: '12px', color: 'rgba(47,47,51,0.6)' }}>{product.unit_type}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-sm font-mono">{product.sku}</td>
-                  <td className="p-4 text-sm">{product.category}</td>
-                  <td className="p-4 text-right">
-                    <p className="font-medium text-sm">{formatCurrency(product.retail_price)}</p>
-                    {product.wholesale_price && (
-                      <p className="text-xs text-[#27AE60]">WS: {formatCurrency(product.wholesale_price)}</p>
-                    )}
+                  <td style={{ padding: '16px', fontSize: '14px', fontFamily: 'monospace' }}>{product.sku}</td>
+                  <td style={{ padding: '16px', fontSize: '14px' }}>{product.category}</td>
+                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 500 }}>{formatCurrency(product.retail_price)}</p>
+                    {product.wholesale_price && <p style={{ fontSize: '12px', color: '#27AE60' }}>WS: {formatCurrency(product.wholesale_price)}</p>}
                   </td>
-                  <td className="p-4 text-right">
-                    <p className={`font-medium text-sm ${product.current_stock < product.reorder_level ? 'text-[#F39C12]' : ''} ${product.current_stock === 0 ? 'text-[#E74C3C]' : ''}`}>
-                      {product.current_stock}
-                    </p>
-                    <p className="text-xs text-[#2F2F33]/60">Reorder: {product.reorder_level}</p>
+                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 500, color: product.current_stock < product.reorder_level ? '#F39C12' : product.current_stock === 0 ? '#E74C3C' : '#2F2F33' }}>{product.current_stock}</p>
+                    <p style={{ fontSize: '12px', color: 'rgba(47,47,51,0.6)' }}>Reorder: {product.reorder_level}</p>
                   </td>
-                  <td className="p-4 text-center">
-                    {product.current_stock === 0 ? (
-                      <ClayBadge variant="danger">Out</ClayBadge>
-                    ) : product.current_stock < product.reorder_level ? (
-                      <ClayBadge variant="warning">Low</ClayBadge>
-                    ) : (
-                      <ClayBadge variant="success">In Stock</ClayBadge>
-                    )}
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <span style={{ padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: product.current_stock === 0 ? 'rgba(231,76,60,0.1)' : product.current_stock < product.reorder_level ? 'rgba(243,156,18,0.1)' : 'rgba(39,174,96,0.1)', color: product.current_stock === 0 ? '#E74C3C' : product.current_stock < product.reorder_level ? '#F39C12' : '#27AE60' }}>
+                      {product.current_stock === 0 ? 'Out' : product.current_stock < product.reorder_level ? 'Low' : 'In Stock'}
+                    </span>
                   </td>
-                  <td className="p-4 text-center">
-                    <button className="p-2 rounded-[10px] hover:bg-[#F5F6F7]">
-                      <MoreVertical className="w-4 h-4" />
+                  <td style={{ padding: '16px', textAlign: 'center' }}>
+                    <button style={{ padding: '8px', borderRadius: '10px', border: 'none', backgroundColor: 'transparent', cursor: 'pointer' }}>
+                      <MoreVertical size={16} />
                     </button>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {filteredProducts.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-[#2F2F33]/60">
-            <Package className="w-12 h-12 mb-4" />
-            <p>No products found</p>
-          </div>
-        )}
-
-        <div className="p-4 border-t border-[#E0E0E0] flex justify-between items-center">
-          <p className="text-sm text-[#2F2F33]/60">
-            Showing {filteredProducts.length} of {mockProducts.length} products
-          </p>
+        <div style={{ padding: '16px', borderTop: '1px solid #E0E0E0', display: 'flex', justifyContent: 'space-between' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Showing {filteredProducts.length} of {mockProducts.length} products</p>
         </div>
-      </ClayCard>
+      </div>
 
-      {/* Add Product Modal */}
-      <ClayModal
-        isOpen={addProductOpen}
-        onClose={() => setAddProductOpen(false)}
-        title="Add New Product"
-        className="w-full max-w-lg"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">Product Name</label>
-              <ClayInput
-                placeholder="Enter product name"
-                value={newProduct.name}
-                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-              />
+      {addProductOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '24px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Add New Product</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Product Name</label>
+                <input style={inputStyle} placeholder="Enter product name" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Category</label>
+                <select style={inputStyle} value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}>
+                  <option value="">Select category</option>
+                  {categories.filter(c => c !== 'All').map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Unit Type</label>
+                <select style={inputStyle} value={newProduct.unit_type} onChange={(e) => setNewProduct({ ...newProduct, unit_type: e.target.value })}>
+                  <option value="piece">Piece</option>
+                  <option value="carton">Carton</option>
+                  <option value="box">Box</option>
+                  <option value="kg">Kg</option>
+                  <option value="liter">Liter</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>SKU</label>
+                <input style={inputStyle} placeholder="SKU001" value={newProduct.sku} onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Barcode</label>
+                <input style={inputStyle} placeholder="Generate or scan" value={newProduct.barcode} onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Retail Price (IQD)</label>
+                <input type="number" style={inputStyle} value={newProduct.retail_price} onChange={(e) => setNewProduct({ ...newProduct, retail_price: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Wholesale Price (IQD)</label>
+                <input type="number" style={inputStyle} value={newProduct.wholesale_price} onChange={(e) => setNewProduct({ ...newProduct, wholesale_price: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Current Stock</label>
+                <input type="number" style={inputStyle} value={newProduct.current_stock} onChange={(e) => setNewProduct({ ...newProduct, current_stock: Number(e.target.value) })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Reorder Level</label>
+                <input type="number" style={inputStyle} value={newProduct.reorder_level} onChange={(e) => setNewProduct({ ...newProduct, reorder_level: Number(e.target.value) })} />
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Category</label>
-              <select
-                value={newProduct.category}
-                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                className="w-full px-4 py-2.5 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-              >
-                <option value="">Select category</option>
-                {categories.filter(c => c !== 'All').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+              <button style={{ ...buttonStyle(), flex: 1 }} onClick={() => setAddProductOpen(false)}>Cancel</button>
+              <button style={{ ...buttonStyle(true), flex: 1 }} onClick={() => { alert('Product added!'); setAddProductOpen(false); }}>Add Product</button>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Unit Type</label>
-              <select
-                value={newProduct.unit_type}
-                onChange={(e) => setNewProduct({ ...newProduct, unit_type: e.target.value })}
-                className="w-full px-4 py-2.5 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-              >
-                {units.map(unit => (
-                  <option key={unit} value={unit}>{unit}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">SKU</label>
-              <ClayInput
-                placeholder="SKU001"
-                value={newProduct.sku}
-                onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Barcode</label>
-              <ClayInput
-                placeholder="Generate or scan"
-                value={newProduct.barcode}
-                onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Retail Price (IQD)</label>
-              <ClayInput
-                type="number"
-                placeholder="0"
-                value={newProduct.retail_price}
-                onChange={(e) => setNewProduct({ ...newProduct, retail_price: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Wholesale Price (IQD)</label>
-              <ClayInput
-                type="number"
-                placeholder="0"
-                value={newProduct.wholesale_price}
-                onChange={(e) => setNewProduct({ ...newProduct, wholesale_price: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Current Stock</label>
-              <ClayInput
-                type="number"
-                placeholder="0"
-                value={newProduct.current_stock}
-                onChange={(e) => setNewProduct({ ...newProduct, current_stock: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Reorder Level</label>
-              <ClayInput
-                type="number"
-                placeholder="5"
-                value={newProduct.reorder_level}
-                onChange={(e) => setNewProduct({ ...newProduct, reorder_level: Number(e.target.value) })}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-4">
-            <ClayButton
-              variant="ghost"
-              className="flex-1"
-              onClick={() => setAddProductOpen(false)}
-            >
-              Cancel
-            </ClayButton>
-            <ClayButton
-              variant="primary"
-              className="flex-1"
-              onClick={handleAddProduct}
-            >
-              Add Product
-            </ClayButton>
           </div>
         </div>
-      </ClayModal>
+      )}
     </div>
   );
 }

@@ -1,13 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Wallet, Plus, Minus, Lock, Unlock, ArrowUpRight, ArrowDownRight, FileText, MoreVertical } from 'lucide-react';
-import { ClayCard } from '@/components/ui/clay/ClayCard';
-import { ClayButton } from '@/components/ui/clay/ClayButton';
-import { ClayBadge } from '@/components/ui/clay/ClayBadge';
-import { ClayModal } from '@/components/ui/clay/ClayModal';
-import { ClayInput } from '@/components/ui/clay/ClayInput';
+import { Wallet, Plus, Lock, Unlock, ArrowUpRight, ArrowDownRight, FileText, MoreVertical } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/utils/currency';
 
 interface Vault {
@@ -57,309 +51,271 @@ export default function VaultPage() {
   const activeVaults = mockVaults.filter(v => v.status === 'open');
   const totalBalance = activeVaults.reduce((sum, v) => sum + v.current_balance, 0);
 
-  const handleOpenVault = () => {
-    setOpenVaultModal(false);
+  const cardStyle: React.CSSProperties = {
+    padding: '20px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '24px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.06), inset 0 2px 4px rgba(255,255,255,0.8)',
   };
 
-  const handleCloseVault = () => {
-    setCloseVaultModal(false);
+  const primaryButtonStyle: React.CSSProperties = {
+    padding: '8px 16px',
+    borderRadius: '14px',
+    border: 'none',
+    backgroundColor: '#6C63FF',
+    color: 'white',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
   };
 
-  const handleTransaction = () => {
-    setTransactionModal(false);
-    setAmount('');
-    setCategory('');
-    setDescription('');
+  const buttonStyle = (variant: string = 'default'): React.CSSProperties => ({
+    padding: '8px 16px',
+    borderRadius: '14px',
+    border: 'none',
+    backgroundColor: variant === 'danger' ? '#E74C3C' : variant === 'success' ? '#27AE60' : '#F5F6F7',
+    color: variant === 'danger' || variant === 'success' ? 'white' : '#2F2F33',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    flex: variant === 'danger' ? 'none' : 1,
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 14px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '16px',
+    border: '1px solid transparent',
+    outline: 'none',
+    fontSize: '14px',
   };
+
+  const typeButtonStyle = (isActive: boolean, type: 'credit' | 'debit'): React.CSSProperties => ({
+    padding: '12px',
+    borderRadius: '14px',
+    border: 'none',
+    cursor: 'pointer',
+    backgroundColor: isActive ? (type === 'credit' ? '#27AE60' : '#E74C3C') : '#F5F6F7',
+    color: isActive ? 'white' : '#2F2F33',
+    fontSize: '14px',
+    fontWeight: 500,
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[#2F2F33]">Money Vault</h1>
-          <p className="text-[#2F2F33]/60">Manage your cash and transactions</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>Money Vault</h1>
+          <p style={{ color: 'rgba(47,47,51,0.6)' }}>Manage your cash and transactions</p>
         </div>
-        <div className="flex gap-2">
-          <ClayButton variant="primary" onClick={() => setOpenVaultModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Open Vault
-          </ClayButton>
+        <button style={primaryButtonStyle} onClick={() => setOpenVaultModal(true)}>
+          <Plus size={16} />
+          Open Vault
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: 'rgba(108,99,255,0.1)' }}>
+            <Wallet size={24} color="#6C63FF" />
+          </div>
+          <div>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Active Balance</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#6C63FF' }}>{formatCurrency(totalBalance)}</p>
+          </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: 'rgba(39,174,96,0.1)' }}>
+            <Unlock size={24} color="#27AE60" />
+          </div>
+          <div>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Open Vaults</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#27AE60' }}>{activeVaults.length}</p>
+          </div>
+        </div>
+        <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: 'rgba(231,76,60,0.1)' }}>
+            <Lock size={24} color="#E74C3C" />
+          </div>
+          <div>
+            <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Closed Vaults</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#E74C3C' }}>{mockVaults.filter(v => v.status === 'closed').length}</p>
+          </div>
         </div>
       </div>
 
-      {/* Vault Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#6C63FF]/10">
-              <Wallet className="w-6 h-6 text-[#6C63FF]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">Total Active Balance</p>
-              <p className="text-2xl font-bold text-[#6C63FF]">{formatCurrency(totalBalance)}</p>
-            </div>
-          </div>
-        </ClayCard>
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#27AE60]/10">
-              <Unlock className="w-6 h-6 text-[#27AE60]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">Open Vaults</p>
-              <p className="text-2xl font-bold text-[#27AE60]">{activeVaults.length}</p>
-            </div>
-          </div>
-        </ClayCard>
-        <ClayCard className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-[16px] bg-[#E74C3C]/10">
-              <Lock className="w-6 h-6 text-[#E74C3C]" />
-            </div>
-            <div>
-              <p className="text-sm text-[#2F2F33]/60">Closed Vaults</p>
-              <p className="text-2xl font-bold text-[#E74C3C]">{mockVaults.filter(v => v.status === 'closed').length}</p>
-            </div>
-          </div>
-        </ClayCard>
-      </div>
-
-      {/* Vault Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '16px', marginBottom: '24px' }}>
         {mockVaults.map((vault) => (
-          <ClayCard key={vault.id} className="p-5">
-            <div className="flex items-start justify-between mb-4">
+          <div key={vault.id} style={cardStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
-                <h3 className="font-semibold text-[#2F2F33]">{vault.name}</h3>
-                <p className="text-sm text-[#2F2F33]/60">{vault.currency_base}</p>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#2F2F33' }}>{vault.name}</h3>
+                <p style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>{vault.currency_base}</p>
               </div>
-              <ClayBadge variant={vault.status === 'open' ? 'success' : 'danger'}>
+              <span style={{ padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, backgroundColor: vault.status === 'open' ? 'rgba(39,174,96,0.1)' : 'rgba(231,76,60,0.1)', color: vault.status === 'open' ? '#27AE60' : '#E74C3C' }}>
                 {vault.status === 'open' ? 'Open' : 'Closed'}
-              </ClayBadge>
+              </span>
             </div>
-            <p className="text-2xl font-bold mb-4">{formatCurrency(vault.current_balance, vault.currency_base)}</p>
-            <div className="flex gap-2">
+            <p style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>{formatCurrency(vault.current_balance, vault.currency_base)}</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
               {vault.status === 'open' ? (
                 <>
-                  <ClayButton 
-                    variant="primary" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => {
-                      setSelectedVault(vault);
-                      setTransactionModal(true);
-                    }}
-                  >
+                  <button style={{ ...buttonStyle('primary'), flex: 1 }} onClick={() => { setSelectedVault(vault); setTransactionModal(true); }}>
                     Add Transaction
-                  </ClayButton>
-                  <ClayButton 
-                    variant="danger" 
-                    size="sm"
-                    onClick={() => {
-                      setSelectedVault(vault);
-                      setCloseVaultModal(true);
-                    }}
-                  >
+                  </button>
+                  <button style={buttonStyle('danger')} onClick={() => { setSelectedVault(vault); setCloseVaultModal(true); }}>
                     Close
-                  </ClayButton>
+                  </button>
                 </>
               ) : (
-                <ClayButton variant="primary" size="sm" className="w-full">
-                  Reopen
-                </ClayButton>
+                <button style={{ ...buttonStyle('primary'), width: '100%' }}>Reopen</button>
               )}
             </div>
-          </ClayCard>
+          </div>
         ))}
       </div>
 
-      {/* Transaction History */}
-      <ClayCard className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#2F2F33]">Recent Transactions</h2>
-          <ClayButton variant="ghost" size="sm">
-            <FileText className="w-4 h-4 mr-2" />
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#2F2F33' }}>Recent Transactions</h2>
+          <button style={{ ...buttonStyle(), padding: '8px 12px' }}>
+            <FileText size={16} />
             Generate Report
-          </ClayButton>
+          </button>
         </div>
-        <div className="space-y-3">
-          {mockTransactions.map((tx, index) => (
-            <motion.div
-              key={tx.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`flex items-center gap-4 p-3 rounded-[14px] bg-[#F5F6F7] border-l-4 ${
-                tx.type === 'credit' ? 'border-l-[#27AE60]' : 'border-l-[#E74C3C]'
-              }`}
-            >
-              <div className={`p-2 rounded-[10px] ${tx.type === 'credit' ? 'bg-[#27AE60]/10' : 'bg-[#E74C3C]/10'}`}>
-                {tx.type === 'credit' 
-                  ? <ArrowUpRight className="w-4 h-4 text-[#27AE60]" /> 
-                  : <ArrowDownRight className="w-4 h-4 text-[#E74C3C]" />
-                }
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {mockTransactions.map((tx) => (
+            <div key={tx.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '14px', backgroundColor: '#F5F6F7', borderLeft: `4px solid ${tx.type === 'credit' ? '#27AE60' : '#E74C3C'}` }}>
+              <div style={{ padding: '8px', borderRadius: '10px', backgroundColor: tx.type === 'credit' ? 'rgba(39,174,96,0.1)' : 'rgba(231,76,60,0.1)' }}>
+                {tx.type === 'credit' ? <ArrowUpRight size={16} color="#27AE60" /> : <ArrowDownRight size={16} color="#E74C3C" />}
               </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm text-[#2F2F33]">{tx.description}</p>
-                <p className="text-xs text-[#2F2F33]/60">{tx.category} • {tx.performed_by}</p>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#2F2F33' }}>{tx.description}</p>
+                <p style={{ fontSize: '12px', color: 'rgba(47,47,51,0.6)' }}>{tx.category} - {tx.performed_by}</p>
               </div>
-              <div className="text-right">
-                <p className={`font-bold ${tx.type === 'credit' ? 'text-[#27AE60]' : 'text-[#E74C3C]'}`}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: tx.type === 'credit' ? '#27AE60' : '#E74C3C' }}>
                   {tx.type === 'credit' ? '+' : '-'}{formatCurrency(tx.amount, tx.currency)}
                 </p>
-                <p className="text-xs text-[#2F2F33]/60">{formatDate(tx.recorded_at)}</p>
+                <p style={{ fontSize: '12px', color: 'rgba(47,47,51,0.6)' }}>{formatDate(tx.recorded_at)}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </ClayCard>
+      </div>
 
-      {/* Open Vault Modal */}
-      <ClayModal
-        isOpen={openVaultModal}
-        onClose={() => setOpenVaultModal(false)}
-        title="Open New Vault"
-        className="w-full max-w-md"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Vault Name</label>
-            <ClayInput placeholder="e.g., Main Cash Drawer" />
+      {openVaultModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Open New Vault</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Vault Name</label>
+                <input style={inputStyle} placeholder="e.g., Main Cash Drawer" />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Opening Balance (IQD)</label>
+                <input type="number" style={inputStyle} placeholder="0" />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Notes (Optional)</label>
+                <textarea style={{ ...inputStyle, minHeight: '80px' }} placeholder="Add any notes..." />
+              </div>
+              <button style={primaryButtonStyle} onClick={() => setOpenVaultModal(false)}>Open Vault</button>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Opening Balance (IQD)</label>
-            <ClayInput type="number" placeholder="0" />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Notes (Optional)</label>
-            <textarea 
-              className="w-full px-4 py-3 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-              rows={3}
-              placeholder="Add any notes..."
-            />
-          </div>
-          <ClayButton variant="primary" className="w-full" onClick={handleOpenVault}>
-            Open Vault
-          </ClayButton>
         </div>
-      </ClayModal>
+      )}
 
-      {/* Close Vault Modal */}
-      <ClayModal
-        isOpen={closeVaultModal}
-        onClose={() => setCloseVaultModal(false)}
-        title="Close Vault"
-        className="w-full max-w-md"
-      >
-        <div className="space-y-4">
-          <div className="p-4 rounded-[16px] bg-[#F5F6F7] space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-[#2F2F33]/60">Opening Balance</span>
-              <span className="font-medium">{formatCurrency(selectedVault?.current_balance || 0)}</span>
+      {closeVaultModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Close Vault</h2>
+            <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: '#F5F6F7', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Opening Balance</span>
+                <span style={{ fontWeight: 500 }}>{formatCurrency(selectedVault?.current_balance || 0)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Credits</span>
+                <span style={{ fontWeight: 500, color: '#27AE60' }}>+{formatCurrency(350000)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '14px', color: 'rgba(47,47,51,0.6)' }}>Total Debits</span>
+                <span style={{ fontWeight: 500, color: '#E74C3C' }}>-{formatCurrency(150000)}</span>
+              </div>
+              <div style={{ borderTop: '1px solid #E0E0E0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+                <span>Expected Balance</span>
+                <span>{formatCurrency(selectedVault?.current_balance || 0)}</span>
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#2F2F33]/60">Total Credits</span>
-              <span className="font-medium text-[#27AE60]">+{formatCurrency(350000)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#2F2F33]/60">Total Debits</span>
-              <span className="font-medium text-[#E74C3C]">-{formatCurrency(150000)}</span>
-            </div>
-            <div className="border-t pt-2 flex justify-between font-bold">
-              <span>Expected Balance</span>
-              <span>{formatCurrency(selectedVault?.current_balance || 0)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Actual Physical Count</label>
+                <input type="number" style={inputStyle} placeholder="Enter actual count" />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Closing Notes</label>
+                <textarea style={{ ...inputStyle, minHeight: '80px' }} placeholder="Add closing notes..." />
+              </div>
+              <button style={buttonStyle('danger')} onClick={() => setCloseVaultModal(false)}>Close Vault</button>
             </div>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Actual Physical Count</label>
-            <ClayInput type="number" placeholder="Enter actual count" />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Closing Notes</label>
-            <textarea 
-              className="w-full px-4 py-3 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-              rows={3}
-              placeholder="Add closing notes..."
-            />
-          </div>
-          <ClayButton variant="danger" className="w-full" onClick={handleCloseVault}>
-            Close Vault
-          </ClayButton>
         </div>
-      </ClayModal>
+      )}
 
-      {/* Transaction Modal */}
-      <ClayModal
-        isOpen={transactionModal}
-        onClose={() => setTransactionModal(false)}
-        title="Add Transaction"
-        className="w-full max-w-md"
-      >
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTransactionType('credit')}
-              className={`flex-1 p-3 rounded-[14px] text-sm font-medium transition-colors ${
-                transactionType === 'credit'
-                  ? 'bg-[#27AE60] text-white'
-                  : 'bg-[#F5F6F7] text-[#2F2F33]'
-              }`}
-            >
-              <ArrowUpRight className="w-4 h-4 inline mr-1" />
-              Credit (+)
-            </button>
-            <button
-              onClick={() => setTransactionType('debit')}
-              className={`flex-1 p-3 rounded-[14px] text-sm font-medium transition-colors ${
-                transactionType === 'debit'
-                  ? 'bg-[#E74C3C] text-white'
-                  : 'bg-[#F5F6F7] text-[#2F2F33]'
-              }`}
-            >
-              <ArrowDownRight className="w-4 h-4 inline mr-1" />
-              Debit (-)
-            </button>
+      {transactionModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Add Transaction</h2>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button style={typeButtonStyle(transactionType === 'credit', 'credit')} onClick={() => setTransactionType('credit')}>
+                <ArrowUpRight size={16} />
+                Credit (+)
+              </button>
+              <button style={typeButtonStyle(transactionType === 'debit', 'debit')} onClick={() => setTransactionType('debit')}>
+                <ArrowDownRight size={16} />
+                Debit (-)
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Amount (IQD)</label>
+                <input type="number" style={inputStyle} placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Category</label>
+                <select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <option value="">Select category</option>
+                  <option value="sales">Sales Income</option>
+                  <option value="expense">Expense</option>
+                  <option value="advance">Employee Advance</option>
+                  <option value="supplier">Supplier Payment</option>
+                  <option value="petty">Petty Cash</option>
+                  <option value="transfer">Transfer</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Description</label>
+                <input style={inputStyle} placeholder="Enter description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              </div>
+              <button style={transactionType === 'credit' ? buttonStyle('success') : buttonStyle('danger')} onClick={() => setTransactionModal(false)}>
+                {transactionType === 'credit' ? 'Add Credit' : 'Add Debit'}
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Amount (IQD)</label>
-            <ClayInput 
-              type="number" 
-              placeholder="0" 
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#F5F6F7] rounded-[16px] border border-transparent focus:border-[#6C63FF] outline-none text-sm"
-            >
-              <option value="">Select category</option>
-              <option value="sales">Sales Income</option>
-              <option value="expense">Expense</option>
-              <option value="advance">Employee Advance</option>
-              <option value="supplier">Supplier Payment</option>
-              <option value="petty">Petty Cash</option>
-              <option value="transfer">Transfer</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Description</label>
-            <ClayInput 
-              placeholder="Enter description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <ClayButton variant={transactionType === 'credit' ? 'success' : 'danger'} className="w-full" onClick={handleTransaction}>
-            {transactionType === 'credit' ? 'Add Credit' : 'Add Debit'}
-          </ClayButton>
         </div>
-      </ClayModal>
+      )}
     </div>
   );
 }

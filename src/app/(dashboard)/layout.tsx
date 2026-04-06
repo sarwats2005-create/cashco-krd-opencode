@@ -12,24 +12,43 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F5F6F7]">
-      {/* Mobile Sidebar Overlay */}
+    <div style={{ minHeight: '100vh', backgroundColor: '#F5F6F7' }}>
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 40,
+          }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
       
-      {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full z-50 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:block`}>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        height: '100%',
+        width: '240px',
+        zIndex: 50,
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s ease',
+      }}>
         <Sidebar onMobileClose={() => setSidebarOpen(false)} />
       </div>
 
-      {/* Main Content */}
-      <div className="lg:ml-[240px] min-h-screen flex flex-col">
+      <div style={{
+        marginLeft: '0px',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 lg:p-6">
+        <main style={{
+          flex: 1,
+          padding: '16px',
+        }}>
           {children}
         </main>
       </div>
