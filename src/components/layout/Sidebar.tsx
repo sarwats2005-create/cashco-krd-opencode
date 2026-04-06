@@ -20,13 +20,13 @@ import { cn } from '@/utils/currency';
 import { useOrgStore } from '@/store/orgStore';
 
 const navItems = [
-  { href: '/dashboard/overview', icon: LayoutDashboard, label: 'Overview', module: 'dashboard' },
-  { href: '/dashboard/pos', icon: ShoppingCart, label: 'POS Terminal', module: 'pos' },
-  { href: '/dashboard/inventory', icon: Package, label: 'Inventory', module: 'inventory' },
-  { href: '/dashboard/vault', icon: Wallet, label: 'Money Vault', module: 'vault' },
-  { href: '/dashboard/employees', icon: Users, label: 'Employees', module: 'employees' },
-  { href: '/dashboard/expenses', icon: Receipt, label: 'Expenses', module: 'expenses' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Settings', module: 'settings' },
+  { href: '/overview', icon: LayoutDashboard, label: 'Overview', module: 'dashboard' },
+  { href: '/pos', icon: ShoppingCart, label: 'POS Terminal', module: 'pos' },
+  { href: '/inventory', icon: Package, label: 'Inventory', module: 'inventory' },
+  { href: '/vault', icon: Wallet, label: 'Money Vault', module: 'vault' },
+  { href: '/employees', icon: Users, label: 'Employees', module: 'employees' },
+  { href: '/expenses', icon: Receipt, label: 'Expenses', module: 'expenses' },
+  { href: '/settings', icon: Settings, label: 'Settings', module: 'settings' },
 ];
 
 interface SidebarProps {
@@ -41,7 +41,7 @@ export function Sidebar({ onMobileClose }: SidebarProps) {
     <aside className="fixed left-0 top-0 h-full w-[240px] bg-[#2F2F33] text-white flex flex-col z-40 shadow-[4px_0_24px_rgba(47,47,51,0.12)]">
       {/* Logo & Org */}
       <div className="p-4 border-b border-white/10">
-        <Link href="/dashboard/overview" className="flex items-center gap-3">
+        <Link href="/overview" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-[14px] bg-[#6C63FF] flex items-center justify-center font-bold text-lg">
             C
           </div>
