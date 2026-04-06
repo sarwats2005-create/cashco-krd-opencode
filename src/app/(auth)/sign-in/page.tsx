@@ -3,122 +3,148 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { ClayCard } from '@/components/ui/clay/ClayCard';
-import { ClayButton } from '@/components/ui/clay/ClayButton';
-import { ClayInput } from '@/components/ui/clay/ClayInput';
 
 export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    router.push('/setup');
+  };
 
-    try {
-      router.push('/setup');
-    } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setLoading(false);
-    }
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    backgroundColor: '#F5F6F7',
+  };
+
+  const cardStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: '420px',
+    padding: '32px',
+    backgroundColor: '#F5F6F7',
+    borderRadius: '24px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.06), 0 2px 4px rgba(255,255,255,0.8) inset',
+  };
+
+  const logoStyle: React.CSSProperties = {
+    width: '64px',
+    height: '64px',
+    borderRadius: '20px',
+    backgroundColor: '#6C63FF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '28px',
+    fontWeight: 'bold',
+    color: 'white',
+    margin: '0 auto 16px',
+    boxShadow: '0 8px 30px rgba(108,99,255,0.3)',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '14px',
+    fontWeight: 500,
+    color: '#2F2F33',
+    marginBottom: '8px',
+  };
+
+  const inputWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    marginBottom: '16px',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 20px',
+    borderRadius: '14px',
+    border: 'none',
+    backgroundColor: '#6C63FF',
+    color: 'white',
+    fontSize: '16px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    marginTop: '8px',
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F5F6F7]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <ClayCard className="p-8">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-[20px] bg-[#6C63FF] flex items-center justify-center font-bold text-2xl text-white mx-auto mb-4 shadow-[0_8px_30px_rgba(108,99,255,0.3)]">
-              C
-            </div>
-            <h1 className="text-2xl font-bold text-[#2F2F33]">CashCo-KRD</h1>
-            <p className="text-[#2F2F33]/60 mt-1">Sign in to your account</p>
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={logoStyle}>C</div>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2F2F33', marginBottom: '4px' }}>CashCo-KRD</h1>
+          <p style={{ color: 'rgba(47,47,51,0.6)' }}>Sign in to your account</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div style={inputWrapperStyle}>
+            <label style={labelStyle}>Email</label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: '#F5F6F7',
+                borderRadius: '16px',
+                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15)',
+                border: '1px solid #E0E0E0',
+                outline: 'none',
+                fontSize: '16px',
+              }}
+              required
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 rounded-[14px] bg-[#E74C3C]/10 text-[#E74C3C] text-sm">
-                {error}
-              </div>
-            )}
+          <div style={inputWrapperStyle}>
+            <label style={labelStyle}>Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: '#F5F6F7',
+                borderRadius: '16px',
+                boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15)',
+                border: '1px solid #E0E0E0',
+                outline: 'none',
+                fontSize: '16px',
+              }}
+              required
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#2F2F33]">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#2F2F33]/40" />
-                <ClayInput
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-12 pr-12"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#2F2F33]/40"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Link 
-                href="/forgot-password" 
-                className="text-sm text-[#6C63FF] hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-
-            <ClayButton 
-              type="submit" 
-              variant="primary"
-              className="w-full py-3"
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </ClayButton>
-          </form>
-
-          <p className="text-center mt-6 text-[#2F2F33]/60">
-            Don't have an account?{' '}
-            <Link href="/sign-up" className="text-[#6C63FF] font-medium hover:underline">
-              Sign Up
+          <div style={{ textAlign: 'right', marginBottom: '16px' }}>
+            <Link href="/forgot-password" style={{ fontSize: '14px', color: '#6C63FF' }}>
+              Forgot password?
             </Link>
-          </p>
-        </ClayCard>
-      </motion.div>
+          </div>
+
+          <button type="submit" style={buttonStyle} disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', color: 'rgba(47,47,51,0.6)' }}>
+          Don't have an account?{' '}
+          <Link href="/sign-up" style={{ color: '#6C63FF', fontWeight: 500 }}>
+            Sign Up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

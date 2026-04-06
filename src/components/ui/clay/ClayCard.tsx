@@ -1,28 +1,33 @@
 'use client';
 
 import { forwardRef, type HTMLAttributes } from 'react';
-import { cn } from '@/utils/currency';
 
 interface ClayCardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'pressed';
 }
 
 export const ClayCard = forwardRef<HTMLDivElement, ClayCardProps>(
-  ({ className, variant = 'default', children, ...props }, ref) => {
-    const variantClasses = {
-      default: 'shadow-[0_8px_30px_rgba(0,0,0,0.06),0_2px_4px_rgba(255,255,255,0.8)_inset]',
-      elevated: 'shadow-[0_12px_40px_rgba(0,0,0,0.1)]',
-      pressed: 'shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)]',
+  ({ className, variant = 'default', children, style, ...props }, ref) => {
+    const baseStyle: React.CSSProperties = {
+      backgroundColor: '#F5F6F7',
+      borderRadius: '24px',
+    };
+
+    const variantStyles: Record<string, React.CSSProperties> = {
+      default: { boxShadow: '0 8px 30px rgba(0,0,0,0.06), 0 2px 4px rgba(255,255,255,0.8) inset' },
+      elevated: { boxShadow: '0 12px 40px rgba(0,0,0,0.1)' },
+      pressed: { boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15)' },
     };
 
     return (
       <div
         ref={ref}
-        className={cn(
-          'bg-[#F5F6F7] rounded-[24px]',
-          variantClasses[variant],
-          className
-        )}
+        style={{
+          ...baseStyle,
+          ...variantStyles[variant],
+          ...style,
+        }}
+        className={className}
         {...props}
       >
         {children}
